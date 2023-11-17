@@ -2868,6 +2868,10 @@ SWITCH_DECLARE(void) switch_rtp_reset(switch_rtp_t *rtp_session)
 	}
 
 }
+SWITCH_DECLARE(void) switch_rtp_reset_stats(switch_rtp_t *rtp_session) {
+	rtcp_stats_init(rtp_session);
+}
+
 
 SWITCH_DECLARE(void) switch_rtp_reset_media_timer(switch_rtp_t *rtp_session)
 {
