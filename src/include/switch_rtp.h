@@ -285,6 +285,7 @@ SWITCH_DECLARE(void) switch_rtp_set_media_timeout(switch_rtp_t *rtp_session, uin
 
 SWITCH_DECLARE(switch_status_t) switch_rtp_udptl_mode(switch_rtp_t *rtp_session);
 SWITCH_DECLARE(void) switch_rtp_reset(switch_rtp_t *rtp_session);
+SWITCH_DECLARE(void) switch_rtp_reset_stats(switch_rtp_t *rtp_session);
 
 /*!
   \brief Assign a local address to the RTP session

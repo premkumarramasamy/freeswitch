@@ -13049,6 +13049,7 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_receive_message(switch_core_se
 		if (switch_rtp_ready(a_engine->rtp_session)) {
 			switch_rtp_reset_jb(a_engine->rtp_session);
 			rtp_flush_read_buffer(a_engine->rtp_session, SWITCH_RTP_FLUSH_ONCE);
+			switch_rtp_reset_stats(a_engine->rtp_session);
 		}
 		goto end;
 
@@ -13056,6 +13057,7 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_receive_message(switch_core_se
 		if (switch_rtp_ready(v_engine->rtp_session)) {
 			switch_rtp_reset_jb(v_engine->rtp_session);
 			switch_rtp_flush(v_engine->rtp_session);
+			switch_rtp_reset_stats(v_engine->rtp_session);
 		}
 		goto end;
 	case SWITCH_MESSAGE_INDICATE_3P_MEDIA:
