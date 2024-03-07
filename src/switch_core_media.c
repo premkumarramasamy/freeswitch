@@ -1100,6 +1100,9 @@ static switch_status_t switch_core_media_build_crypto(switch_media_handle_t *smh
 					  type2str(type),
 					  engine->ssec[ctype].local_crypto_key);
 
+    switch_channel_set_variable(channel, "crypto_key_generated", "true");
+
+			  
 	if (!(smh->mparams->ndlb & SM_NDLB_DISABLE_SRTP_AUTH) &&
 		!((val = switch_channel_get_variable(channel, "NDLB_support_asterisk_missing_srtp_auth")) && switch_true(val))) {
 		engine->ssec[ctype].crypto_type = ctype;
@@ -1737,7 +1740,13 @@ SWITCH_DECLARE(int) switch_core_session_check_incoming_crypto(switch_core_sessio
 				if(!switch_channel_test_flag(session->channel, CF_LATE_MEDIA)) {
 					switch_core_media_build_crypto(session->media_handle, type, crypto_tag, ctype, SWITCH_RTP_CRYPTO_SEND, 1, use_alias);
 					switch_rtp_add_crypto_key(engine->rtp_session, SWITCH_RTP_CRYPTO_SEND, atoi(crypto), &engine->ssec[engine->crypto_type]);
+				} else {
+					if(switch_channel_var_true(session->channel, "crypto_key_re_generated")) {
+						switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_INFO, "SEND Key regenerated, Hence requesting to re-activate Send Key\n");
+						switch_rtp_add_crypto_key(engine->rtp_session, SWITCH_RTP_CRYPTO_SEND, atoi(crypto), &engine->ssec[engine->crypto_type]);
+					}
 				}
+				switch_channel_set_variable(session->channel, "crypto_key_re_generated", "false");
 				switch_channel_clear_flag(session->channel, CF_LATE_MEDIA);
 
 			}
@@ -1818,6 +1827,8 @@ SWITCH_DECLARE(void) switch_core_session_check_outgoing_crypto(switch_core_sessi
 	switch_channel_t *channel = switch_core_session_get_channel(session);
 	switch_media_handle_t *smh;
 	int i;
+	switch_rtp_engine_t *engine;
+
 
 	if (switch_core_session_media_handle_ready(session) != SWITCH_STATUS_SUCCESS) {
 		return;
@@ -1836,8 +1847,17 @@ SWITCH_DECLARE(void) switch_core_session_check_outgoing_crypto(switch_core_sessi
 	}
 
 	switch_channel_set_flag(channel, CF_SECURE);
+	engine = &session->media_handle->engines[SWITCH_MEDIA_TYPE_AUDIO];
+	switch_channel_set_variable(channel, "crypto_key_generated", "false");
 
 	for (i = 0; smh->crypto_suite_order[i] != CRYPTO_INVALID; i++) {
+
+		int flag =0 ;
+		
+		if(switch_rtp_ready(engine->rtp_session) &&  !engine->ssec[smh->crypto_suite_order[i]].local_raw_key[0]) {
+			flag =1 ;
+		}
+
 		switch_core_media_build_crypto(session->media_handle,
 									   SWITCH_MEDIA_TYPE_AUDIO, SWITCH_NO_CRYPTO_TAG, smh->crypto_suite_order[i], SWITCH_RTP_CRYPTO_SEND, 0, 0);
 
@@ -1846,7 +1866,13 @@ SWITCH_DECLARE(void) switch_core_session_check_outgoing_crypto(switch_core_sessi
 
 		switch_core_media_build_crypto(session->media_handle,
 									   SWITCH_MEDIA_TYPE_TEXT, SWITCH_NO_CRYPTO_TAG, smh->crypto_suite_order[i], SWITCH_RTP_CRYPTO_SEND, 0, 0);
+	
+		if(flag && switch_channel_var_true(channel, "crypto_key_generated")){
+			switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_INFO, "Generated new crypto key\n");
+			switch_channel_set_variable(channel, "crypto_key_re_generated", "true");
+		}
 	}
+
 
 }
 
