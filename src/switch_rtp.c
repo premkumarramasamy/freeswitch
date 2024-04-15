@@ -6054,6 +6054,9 @@ static switch_status_t read_rtp_packet(switch_rtp_t *rtp_session, switch_size_t 
 				srtp_err_status_t stat = 0;
 
 				if (rtp_session->flags[SWITCH_RTP_FLAG_SECURE_RECV_RESET] || !rtp_session->recv_ctx[rtp_session->srtp_idx_rtp]) {
+					uint32_t roc;
+					int status = srtp_get_stream_roc(rtp_session->recv_ctx[rtp_session->srtp_idx_rtp], rtp_session->remote_ssrc, &roc);
+					switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(rtp_session->session), SWITCH_LOG_INFO, "BEFORE RESET, RECV Stream ROC: %u, Seq: %u, ssrc: %u,  Status:%d\n", roc, ntohs(rtp_session->recv_msg.header.seq), rtp_session->remote_ssrc, status);
 					switch_rtp_clear_flag(rtp_session, SWITCH_RTP_FLAG_SECURE_RECV_RESET);
 					srtp_dealloc(rtp_session->recv_ctx[rtp_session->srtp_idx_rtp]);
 					rtp_session->recv_ctx[rtp_session->srtp_idx_rtp] = NULL;
@@ -8310,7 +8313,9 @@ static int rtp_common_write(switch_rtp_t *rtp_session,
 
 
 			if (rtp_session->flags[SWITCH_RTP_FLAG_SECURE_SEND_RESET] || !rtp_session->send_ctx[rtp_session->srtp_idx_rtp]) {
-
+				uint32_t roc;
+				int status = srtp_get_stream_roc(rtp_session->send_ctx[rtp_session->srtp_idx_rtp], rtp_session->ssrc, &roc);
+				switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(rtp_session->session), SWITCH_LOG_INFO, "Before reset, SEND Stream ROC: %u, Seq: %u, ssrc: %u, status: %d\n", roc, ntohs(send_msg->header.seq),  rtp_session->ssrc, status);
 				switch_rtp_clear_flag(rtp_session, SWITCH_RTP_FLAG_SECURE_SEND_RESET);
 				srtp_dealloc(rtp_session->send_ctx[rtp_session->srtp_idx_rtp]);
 				rtp_session->send_ctx[rtp_session->srtp_idx_rtp] = NULL;
@@ -8837,6 +8842,9 @@ SWITCH_DECLARE(switch_status_t) switch_rtp_write_raw(switch_rtp_t *rtp_session, 
 			srtp_err_status_t stat;
 
 			if (rtp_session->flags[SWITCH_RTP_FLAG_SECURE_SEND_RESET]) {
+				uint32_t roc;
+				int status = srtp_get_stream_roc(rtp_session->send_ctx[rtp_session->srtp_idx_rtp], rtp_session->ssrc, &roc);
+				switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(rtp_session->session), SWITCH_LOG_INFO, "Before Reset, SEDN Stream ROC: %u, Seq: %u, ssrc: %u,  status: %d \n", roc, ntohs(rtp_session->write_msg.header.seq), rtp_session->ssrc, status);
 				switch_rtp_clear_flag(rtp_session, SWITCH_RTP_FLAG_SECURE_SEND_RESET);
 				srtp_dealloc(rtp_session->send_ctx[rtp_session->srtp_idx_rtp]);
 				rtp_session->send_ctx[rtp_session->srtp_idx_rtp] = NULL;
