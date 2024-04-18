@@ -345,9 +345,12 @@ FST_CORE_EX_BEGIN("./conf-sipp", SCF_VG | SCF_USE_SQL)
 									break;
 								}
 							}
-
+							if ((temp = strstr(temp1,"RTP/AVP"))) {
+									switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Fail due to RTP/AVP being sent.\n");
+									sdp_count = 0;
+									break;
+							}
 						}
-
 					} else {
 						switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "SAVP not found in SDP.\n");
 					}
@@ -357,6 +360,61 @@ FST_CORE_EX_BEGIN("./conf-sipp", SCF_VG | SCF_USE_SQL)
 					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Uuid not found in Channel Data.\n");
 				}
 
+				fst_check(sdp_count == 1); 
+				/* sipp should timeout, attempt kill, just in case.*/
+				kill_sipp();
+			}
+		}
+		FST_TEST_END()
+
+		FST_TEST_BEGIN(uac_savp_check_do)
+		{
+			const char *local_ip_v4 = switch_core_get_variable("local_ip_v4");
+			char uuid[100] = "";
+			int sipp_ret;
+			int sdp_count = 0;
+
+			sipp_ret = start_sipp_uac(local_ip_v4, 5080, "1212121212", "sipp-scenarios/uac_savp_check_do.xml", "");
+			if (sipp_ret < 0 || sipp_ret == 127) {
+				fst_check(!"sipp not found");
+			} else {
+				test_wait_for_uuid(uuid);
+				if (!zstr(uuid)) {
+					const char *sdp_str1 = NULL, *sdp_str2 = NULL;
+					const char *temp = NULL, *temp1 = NULL;
+					switch_core_session_t *session = switch_core_session_locate(uuid);
+					switch_channel_t *channel = switch_core_session_get_channel(session);
+					fst_check(channel);
+
+					sdp_str1 = test_wait_for_chan_var(channel,"1");
+					sdp_str2 = test_wait_for_chan_var(channel,"2");
+
+					if (sdp_str1 && sdp_str2 && (temp = strstr(sdp_str2,"RTP/SAVP")) && (temp1 = strstr(temp,"crypto"))) {
+						int i = 0;
+						sdp_count = 1;
+						for (i = 0; temp1[i]; i++) {
+							if ((temp = strstr(temp1,"RTP/SAVP"))) {
+								if ((temp1 = strstr(temp,"crypto"))) {
+									i = 0;
+								} else {
+									switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Fail due to no crypto found with SAVP.\n");
+									sdp_count = 0;
+									break;
+								}
+							}
+							if ((temp = strstr(temp1,"RTP/AVP"))) {
+									switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Fail due to RTP/AVP being sent.\n");
+									sdp_count = 0;
+									break;
+							}
+						}
+					} else {
+						switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "SAVP not found in SDP.\n");
+					}
+					switch_core_session_rwunlock(session);
+				} else {
+					switch_log_printf(SWITCH_CHANNEL_LOG, SWITCH_LOG_ERROR, "Uuid not found in Channel Data.\n");
+				}
 				fst_check(sdp_count == 1); 
 				/* sipp should timeout, attempt kill, just in case.*/
 				kill_sipp();
