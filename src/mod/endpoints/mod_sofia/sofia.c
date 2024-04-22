@@ -7995,6 +7995,11 @@ static void sofia_handle_sip_i_state(switch_core_session_t *session, int status,
 						switch_channel_set_variable(channel, SWITCH_ENDPOINT_DISPOSITION_VARIABLE, "3PCC DISABLED");
 						switch_channel_hangup(channel, SWITCH_CAUSE_MANDATORY_IE_MISSING);
 					} else {
+						const char *contact_params = switch_channel_get_variable(channel, "sip_contact_params");
+						if (strcasecmp(contact_params, "transport=tls") == 0  &&  switch_channel_direction(tech_pvt->channel) == SWITCH_CALL_DIRECTION_INBOUND) {
+							switch_channel_set_flag(channel, CF_3PCC);
+							switch_channel_set_variable(channel, "rtp_secure_media", "true:AEAD_AES_256_GCM:AEAD_AES_128_GCM:AES_CM_128_HMAC_SHA1_80");
+						}
 						switch_channel_set_variable(channel, SWITCH_ENDPOINT_DISPOSITION_VARIABLE, "RECEIVED_NOSDP");
 						switch_core_media_choose_port(tech_pvt->session, SWITCH_MEDIA_TYPE_AUDIO, 0);
 						switch_core_media_prepare_codecs(session, 1);
