@@ -8511,6 +8511,12 @@ static void sofia_handle_sip_i_state(switch_core_session_t *session, int status,
 			/* sdp changed since 18X w sdp, we're supposed to ignore it but we, of course, were pressured into supporting it */
 			uint8_t match = 0;
 
+			if (tech_pvt->mparams.hold_laps && switch_channel_var_true(channel, "sip_unhold_nosdp") && status == 200) {
+				switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_INFO, "Got Ack with SDP, when call is on hold/unhold\n");
+				ss_state = nua_callstate_completed;
+				goto state_process;
+			}
+
 			sofia_clear_flag(tech_pvt, TFLAG_NEW_SDP);
 			switch_channel_set_flag(tech_pvt->channel, CF_REINVITE);
 
@@ -8577,7 +8583,13 @@ static void sofia_handle_sip_i_state(switch_core_session_t *session, int status,
 				int is_ok = 1;
 
 				if (!tech_pvt) goto done;
-
+			
+				if (tech_pvt->mparams.hold_laps && switch_channel_var_true(channel, "sip_unhold_nosdp") && status == 200) {
+					switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_INFO, "Got Ack with SDP, when call is on hold/unhold\n");
+					ss_state = nua_callstate_completed;
+					goto state_process;
+				}
+				
 				if (tech_pvt->mparams.num_codecs) {
 					if (sofia_test_flag(tech_pvt, TFLAG_GOT_ACK)) {
 						match = sofia_media_negotiate_sdp(session, r_sdp, SDP_TYPE_REQUEST);
