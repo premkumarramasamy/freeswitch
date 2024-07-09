@@ -3216,28 +3216,32 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_read_frame(switch_core_session
 
 					payload_map_t *pmap;
 
-
 					switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG,
 									  "alternate payload received (received %d, expecting %d)\n",
 									  (int) engine->read_frame.payload, (int) engine->cur_payload_map->pt);
 
 
 					/* search for payload type */
-					switch_mutex_lock(smh->sdp_mutex);
-					for (pmap = engine->payload_map; pmap; pmap = pmap->next) {
-						if (engine->read_frame.payload == pmap->recv_pt && pmap->negotiated) {
-							engine->cur_payload_map = pmap;
-							engine->cur_payload_map->current = 1;
-							switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_WARNING,
-											  "Changing current codec to %s (payload type %d).\n",
-											  pmap->iananame, pmap->pt);
+					if(switch_mutex_trylock(smh->sdp_mutex)  == SWITCH_STATUS_SUCCESS) {
+						for (pmap = engine->payload_map; pmap; pmap = pmap->next) {
+							if (engine->read_frame.payload == pmap->recv_pt && pmap->negotiated) {
+								engine->cur_payload_map = pmap;
+								engine->cur_payload_map->current = 1;
+								switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_WARNING,
+												"Changing current codec to %s (payload type %d).\n",
+												pmap->iananame, pmap->pt);
 
-							/* mark to re-set codec */
-							engine->reset_codec = 1;
-							break;
+								/* mark to re-set codec */
+								engine->reset_codec = 1;
+								break;
+							}
 						}
+						switch_mutex_unlock(smh->sdp_mutex);
+					} else {
+						switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_WARNING,
+										  "Could not get lock to change payload type %d.\n",
+										  (int) engine->read_frame.payload);
 					}
-					switch_mutex_unlock(smh->sdp_mutex);
 
 					if (!engine->reset_codec) {
 						switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_WARNING,
