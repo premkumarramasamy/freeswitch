@@ -39,7 +39,7 @@
 #include <errno.h>
 #include <sofia-sip/sdp.h>
 #include <sofia-sip/su.h>
-
+#include <stdlib.h>
 #include <stdbool.h>
 
 static switch_t38_options_t * switch_core_media_process_udptl(switch_core_session_t *session, sdp_session_t *sdp, sdp_media_t *m);
@@ -3063,9 +3063,8 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_read_frame(switch_core_session
 		if (type != SWITCH_MEDIA_TYPE_TEXT && engine->read_frame.datalen > 0) {
 			uint32_t bytes = 0;
 			int frames = 1;
-			char *abort_enabled = std::getenv("ABORT_ENABLED");
-    		int abort = abort_enabled ? ::atoi(abort_enabled) : 0;
-			if(abort) {
+			char *abort_enabled = getenv("ABORT_ENABLED");
+    		if(abort_enabled) {
 				abort();
 			}
 			/* autofix timing */
