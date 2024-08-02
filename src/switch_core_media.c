@@ -3063,7 +3063,11 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_read_frame(switch_core_session
 		if (type != SWITCH_MEDIA_TYPE_TEXT && engine->read_frame.datalen > 0) {
 			uint32_t bytes = 0;
 			int frames = 1;
-			abort();
+			char *abort_enabled = std::getenv("ABORT_ENABLED");
+    		int abort = abort_enabled ? ::atoi(abort_enabled) : 0;
+			if(abort) {
+				abort();
+			}
 			/* autofix timing */
 			if (!switch_test_flag((&engine->read_frame), SFF_CNG)) {
 				if (!engine->read_codec.implementation || !switch_core_codec_ready(&engine->read_codec)) {
