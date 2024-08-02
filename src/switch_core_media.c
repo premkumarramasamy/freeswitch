@@ -2804,9 +2804,6 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_read_frame(switch_core_session
 
 	switch_assert(session);
 
-	switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_INFO, "BMTEST Dummy test change\n");
-
-
 	if (!(smh = session->media_handle)) {
 		return SWITCH_STATUS_FALSE;
 	}
@@ -3206,7 +3203,6 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_read_frame(switch_core_session
 				}
 
 				/* autofix payload type */
-
 				if (!engine->reset_codec &&
 					engine->codec_negotiated &&
 					(!smh->mparams->cng_pt || engine->read_frame.payload != smh->mparams->cng_pt) &&
@@ -3264,6 +3260,7 @@ SWITCH_DECLARE(switch_status_t) switch_core_media_read_frame(switch_core_session
 					continue;
 				}
 			}
+			abort();
 			break;
 		}
 	}
