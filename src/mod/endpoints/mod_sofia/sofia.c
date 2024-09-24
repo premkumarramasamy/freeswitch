@@ -8467,6 +8467,11 @@ static void sofia_handle_sip_i_state(switch_core_session_t *session, int status,
 					}
 				}
 
+				if(switch_channel_test_flag(channel, CF_TOGGLE_HOLD_LATE_MEDIA)){
+					switch_channel_clear_flag(tech_pvt->channel, CF_TOGGLE_HOLD_LATE_MEDIA);
+					switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_DEBUG, "Toggled Hold due to SDP on ACK, hence no need to send any sip response\n");
+					goto done;
+				}
 
 				if (is_ok) {
 
@@ -8512,6 +8517,7 @@ static void sofia_handle_sip_i_state(switch_core_session_t *session, int status,
 			uint8_t match = 0;
 
 			if (tech_pvt->mparams.hold_laps && switch_channel_var_true(channel, "sip_unhold_nosdp") && status == 200) {
+				switch_channel_set_flag(tech_pvt->channel, CF_TOGGLE_HOLD_LATE_MEDIA);
 				switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_INFO, "Got Ack with SDP, when call is on hold/unhold\n");
 				ss_state = nua_callstate_completed;
 				goto state_process;
@@ -8585,6 +8591,7 @@ static void sofia_handle_sip_i_state(switch_core_session_t *session, int status,
 				if (!tech_pvt) goto done;
 			
 				if (tech_pvt->mparams.hold_laps && switch_channel_var_true(channel, "sip_unhold_nosdp") && status == 200) {
+					switch_channel_set_flag(tech_pvt->channel, CF_TOGGLE_HOLD_LATE_MEDIA);
 					switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_INFO, "Got Ack with SDP, when call is on hold/unhold\n");
 					ss_state = nua_callstate_completed;
 					goto state_process;
