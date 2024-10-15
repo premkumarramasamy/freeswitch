@@ -5101,7 +5101,7 @@ SWITCH_STANDARD_API(originate_function)
 	mycmd = strdup(cmd);
 	switch_assert(mycmd);
 	argc = switch_separate_string(mycmd, ' ', argv, (sizeof(argv) / sizeof(argv[0])));
-
+	stream->write_function(stream, "-ARGC Value: %d\n", argc);
 	if (argc < 2 || argc > 7) {
 		stream->write_function(stream, "-USAGE: %s\n", ORIGINATE_SYNTAX);
 		goto done;
