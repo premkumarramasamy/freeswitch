@@ -9,7 +9,7 @@
 #include <float.h>
 
 #define MAX_ACL 100
-#define CMD_BUFLEN 1024 * 1000
+#define CMD_BUFLEN 2048 * 1000
 #define MAX_QUEUE_LEN 25000
 #define MAX_MISSED 500
 #define MAX_PID_CHARS 255
