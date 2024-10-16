@@ -8,7 +8,7 @@
 #include <signal.h>
 #include <getopt.h>
 
-#define CMD_BUFLEN 1024
+#define CMD_BUFLEN 2048
 
 #ifndef WIN32
 #include <esl_config_auto.h>
