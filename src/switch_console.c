@@ -35,7 +35,7 @@
 #ifndef _MSC_VER
 #include <switch_private.h>
 #endif
-#define CMD_BUFLEN 1024
+#define CMD_BUFLEN 2048
 
 #ifdef HAVE_LIBEDIT
 #include <histedit.h>
