@@ -5097,11 +5097,15 @@ SWITCH_STANDARD_API(originate_function)
 	if (session){
 		switch_log_printf(SWITCH_CHANNEL_SESSION_LOG(session), SWITCH_LOG_NOTICE, "Originate can take 60 seconds to complete, and blocks the existing session. Do not confuse with a lockup.\n");
 	}
-
+	stream->write_function(stream, "-CMD Value before Copying: %s\n", cmd);
 	mycmd = strdup(cmd);
 	switch_assert(mycmd);
+	stream->write_function(stream, "-CMD Value after Copying: %s\n", mycmd);
 	argc = switch_separate_string(mycmd, ' ', argv, (sizeof(argv) / sizeof(argv[0])));
 	stream->write_function(stream, "-ARGC Value: %d\n", argc);
+	for (x = 0; x < argc && argv[x]; x++) {
+		stream->write_function(stream, "-ARGC Value: %s\n", argv[x]);
+	}
 	if (argc < 2 || argc > 7) {
 		stream->write_function(stream, "-USAGE: %s\n", ORIGINATE_SYNTAX);
 		goto done;
